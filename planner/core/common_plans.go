@@ -802,6 +802,8 @@ func GetExplainRowsForPlan(plan Plan) (rows [][]string) {
 		Analyze:    false,
 	}
 	if err := explain.RenderResult(); err != nil {
+		explain.ctx.GetSessionVars().StmtCtx.RuntimeStatsColl=nil
+
 		return rows
 	}
 	return explain.Rows
@@ -814,7 +816,7 @@ func (e *Explain) prepareSchema() error {
 
 	switch {
 	case format == ast.ExplainFormatROW && !e.Analyze:
-		fieldNames = []string{"id", "estRows", "task", "access object", "operator info"}
+		fieldNames = []string{"id", "estRows",  "task", "access object", "operator info" }
 	case format == ast.ExplainFormatROW && e.Analyze:
 		fieldNames = []string{"id", "estRows", "actRows", "task", "access object", "execution info", "operator info", "memory", "disk"}
 	case format == ast.ExplainFormatDOT:
@@ -845,9 +847,10 @@ func (e *Explain) RenderResult() error {
 	}
 	switch strings.ToLower(e.Format) {
 	case ast.ExplainFormatROW:
-		if e.Rows == nil || e.Analyze {
+		if e.Rows == nil || e.Analyze ||!e.Analyze{
 			e.explainedPlans = map[int]bool{}
 			err := e.explainPlanInRowFormat(e.TargetPlan, "root", "", "", true)
+
 			if err != nil {
 				return err
 			}
@@ -1025,13 +1028,14 @@ func (e *Explain) prepareOperatorInfo(p Plan, taskType, driverSide, indent strin
 	} else {
 		operatorInfo = p.ExplainInfo()
 	}
+	actRows, analyzeInfo, memoryInfo, diskInfo := getRuntimeInfo(e.ctx, p)
 
 	var row []string
-	if e.Analyze {
+	if e.Analyze{
 		actRows, analyzeInfo, memoryInfo, diskInfo := getRuntimeInfo(e.ctx, p)
 		row = []string{id, estRows, actRows, taskType, accessObject, analyzeInfo, operatorInfo, memoryInfo, diskInfo}
 	} else {
-		row = []string{id, estRows, taskType, accessObject, operatorInfo}
+		row = []string{id, estRows, actRows, taskType, accessObject, analyzeInfo, operatorInfo, memoryInfo, diskInfo}
 	}
 	e.Rows = append(e.Rows, row)
 }

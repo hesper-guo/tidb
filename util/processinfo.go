@@ -16,6 +16,7 @@ package util
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/pingcap/tidb/util/execdetails"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ type ProcessInfo struct {
 	Host            string
 	DB              string
 	Plan            interface{}
+	RuntimeStatsColl *execdetails.RuntimeStatsColl
 	PlanExplainRows [][]string
 	Time            time.Time
 	Info            string
@@ -70,6 +72,7 @@ func (pi *ProcessInfo) ToRowForShow(full bool) []interface{} {
 		t,
 		serverStatus2Str(pi.State),
 		info,
+		pi.RuntimeStatsColl,
 	}
 }
 

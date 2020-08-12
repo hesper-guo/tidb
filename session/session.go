@@ -278,7 +278,9 @@ func (s *session) cleanRetryInfo() {
 func (s *session) Status() uint16 {
 	return s.sessionVars.Status
 }
-
+func(s *session) getRuntimeInfo() *execdetails.RuntimeStatsColl {
+	return s.sessionVars.StmtCtx.RuntimeStatsColl
+	}
 func (s *session) LastInsertID() uint64 {
 	if s.sessionVars.StmtCtx.LastInsertID > 0 {
 		return s.sessionVars.StmtCtx.LastInsertID
@@ -1026,6 +1028,7 @@ func (s *session) SetProcessInfo(sql string, t time.Time, command byte, maxExecu
 		DB:               s.sessionVars.CurrentDB,
 		Command:          command,
 		Plan:             s.currentPlan,
+		RuntimeStatsColl: s.sessionVars.StmtCtx.RuntimeStatsColl,
 		PlanExplainRows:  plannercore.GetExplainRowsForPlan(s.currentPlan),
 		Time:             t,
 		State:            s.Status(),
